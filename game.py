@@ -1,8 +1,41 @@
 import pygame
 import os   # regelt filesystem voor get_image
+<<<<<<< HEAD
+import psycopg2
+
+# Connect to an existing database
+conn = psycopg2.connect("dbname=project2 user=postgres password=181aea6e")
+
+# Open a cursor to perform database operations
+cur = conn.cursor()
+
+# Execute a command: this creates a new table
+#cur.execute("CREATE TABLE players (name varchar(10) PRIMARY KEY, wins integer, losses integer);")
+
+# Pass data to fill a query placeholders and let Psycopg perform
+# the correct conversion (no more SQL injections!)
+
+#cur.execute("INSERT INTO players (name,wins, losses) VALUES (%s, %s, %s)",
+#('test', 10, 2))
+
+# Query the database and obtain data as Python objects
+
+#cur.execute("SELECT * FROM players")
+#cur.fetchone()
+#(1, 100, "abc'def")
+
+# Make the changes to the database persistent
+conn.commit()
+
+# Close communication with the database
+cur.close()
+conn.close()
+
+=======
 import random
 import sys
 import eztext
+>>>>>>> origin/master
 pygame.init()
 display_width = 800
 display_height = 600
@@ -129,7 +162,10 @@ def game_instructions():    #instructie scherm
                 pygame.quit()
                 quit()
         gameDisplay.fill(white)
-        gameDisplay.blit(get_image('koala.jpg'), (150, 50))
+        gameDisplay.blit(get_image('euromast1.png'), (0, 0))
+        gameDisplay.blit(get_image('euromast2.png'), (0, 0))
+        gameDisplay.blit(get_image('euromast3.png'), (0, 0))
+        gameDisplay.blit(get_image('euromast4.png'), (0, 0))
         button("Back", 50, 500, 700, 50, tint_green, green, game_intro)
         clock.tick(15)  #refresh rate van 15
         if rolling == True:
@@ -171,5 +207,9 @@ def game_main():    #hoofd gamescherm
 game_intro()
 game_instructions()
 game_main()
+<<<<<<< HEAD
+quit()
+=======
 players()
 quit()
+>>>>>>> origin/master

@@ -14,7 +14,7 @@ red = (255, 0, 0)
 tint_green = (0, 200, 0)
 green = (0, 255, 0)
 blue = (0,0,255)
-txtbx = eztext.Input(maxlength=20, color=(0, 0, 0), prompt='Name:')
+grey = (128,128,128)
 colors = [red,green,blue,black]
 #globals
 intro, Introduction, gameExit,playing, players, throwdice = True, False, False, False, False, 0
@@ -32,6 +32,8 @@ class player(object):
         self.gridy = gridy
         self.idx = 0
         self.turn = False
+        self.txtbx = eztext.Input(x=35, y=250,maxlength=45, color=(255, 0, 0), prompt='Name: ')
+        self.txtbx.value = self.name
     def move(self,x,y):
         self.gridx += x
         self.gridy += y
@@ -45,7 +47,7 @@ class player(object):
         nextelem = colors[self.idx]
         self.color = thiselem
 
-player1 = player("Henkie", 0, green, 70, 30,0)
+player1 = player("Henkie", 0, green, 70, 300,0)
 player2 = player("Hankie", 0, black, 270, 300,0)
 player3 = player("Penkie", 0, blue, 470, 300,0)
 player4 = player("Shanghai", 0, red, 670, 300,0)
@@ -81,6 +83,7 @@ def game_intro():   #main menu scherm
     Instruction, Intro, Players = False, True, False
     # ohgodwhy
     x, y, mov_x, mov_y = 0,0,7,7
+    print (player1.name)
     while intro:
         x += mov_x
         y += mov_y
@@ -132,11 +135,29 @@ def players(): #speler keuze scherm
         player3.draw()
         player4.draw()
         clock.tick(15)  #refresh rate van 15
-        txtbx.update(events)
-        # blit txtbx on the sceen
-        txtbx.draw(gameDisplay)
-        button(str(player1.color), 70, 380, 100, 50, tint_green, green, player1.changecolor())
+        largeText = pygame.font.SysFont("freesansbold.ttf", 115)
+        TextSurf, TextRect = text_objects("Speler 1", largeText)
+        TextRect.center = ((display_width / 2), (display_height / 4))
+        gameDisplay.blit(TextSurf, TextRect)
+        player1.txtbx.update(events)
+        player1.txtbx.draw(gameDisplay)
+        player1.name = player1.txtbx.value
+        button(str(player1.color), 35, 380, 100, 50, tint_green, green, player1.changecolor)
+        button("Back", 50, 500, 700, 50, tint_green, green, game_intro)
+        button("Continue", 50, 440, 700, 50, tint_green, green, game_main)
         pygame.display.flip()
+
+def drawplayers():
+    player1 = player("Henkie", 0, green, 75, 30,0)
+    player2 = player("Hankie", 0, black, 75, 170,0)
+    player3 = player("Penkie", 0, blue, 75, 310,0)
+    player4 = player("Shanghai", 0, red, 75, 450,0)
+    player1.draw()
+    player2.draw()
+    player3.draw()
+    player4.draw()
+
+#def button(msg,x,y,w,h,ic,ac,action=None):          #functie om een knop te maken (text,x,y,width,height,kleur, hover kleur, actie)
 
 def game_main():    #hoofd gamescherm
     Players, Playing = False, True
@@ -147,7 +168,18 @@ def game_main():    #hoofd gamescherm
                 quit()
         gameDisplay.fill(white)
         clock.tick(15)  #refresh rate van 15
+        gameDisplay.blit(get_image('euromastbr.png'), (0, 0))
+        gameDisplay.blit(get_image('euromastrb.png'), (0, 0))
+        gameDisplay.blit(get_image('euromastgy.png'), (0, 0))
+        gameDisplay.blit(get_image('euromastyg.png'), (0, 0))
+        button(None, 0, 0, 200, 800, grey, grey, None)
+        button(None, 600, 0, 200 ,800, grey, grey, None)
+        drawplayers()
+
         pygame.display.flip()
+
+#    def __init__(self,name,score,color,gridx,gridy,turn):
+
 #roep de schermen op
 game_intro()
 game_instructions()

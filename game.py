@@ -458,15 +458,17 @@ def game_options():  #opties menu
                 pygame.quit()
                 quit()
         gameDisplay.fill(white)
-        button("Sound off", 50, 130, 350, 50, tint_green, green, quit)
-        button("Sound on", 400, 130, 350, 50, tint_green, green, quit)
+        button("Sound off", 50, 130, 350, 50, tint_green, green, sound_off)
+        button("Sound on", 400, 130, 350, 50, tint_green, green, sound_on)
         button("Volume down", 50, 230, 350, 50, tint_green, green, quit)
         button("Volume up", 400, 230, 350, 50, tint_green, green, quit)
         button("Back", 50, 500, 700, 50, tint_red, red, game_intro)
         clock.tick(15)  #refresh rate van 15
         pygame.display.flip()
 def sound_off():
-    
+    pygame.mixer.music.stop()
+def sound_on():
+    pygame.mixer.music.play(-1)
 def game_main():    #hoofd gamescherm
     Players, Playing = False, True
     while Playing:

@@ -463,12 +463,18 @@ def game_options():  #opties menu
         button("Volume down", 50, 230, 350, 50, tint_green, green, volumedown)
         button("Volume up", 400, 230, 350, 50, tint_green, green, volumeup)
         button("Back", 50, 500, 700, 50, tint_red, red, game_intro)
+        currentvolume = pygame.mixer.music.get_volume()
+        smallText = pygame.font.Font("freesansbold.ttf", 40)
+        textSurf, textRect = text_objects(str(currentvolume), smallText)
+        textRect.center = (400, 350)
+        gameDisplay.blit(textSurf, textRect)
         clock.tick(15)  #refresh rate van 15
         pygame.display.flip()
+
 def sound_off():
-    pygame.mixer.music.stop()
+    pygame.mixer.music.pause()
 def sound_on():
-    pygame.mixer.music.play(-1)
+    pygame.mixer.music.unpause()
 
 def volumedown():
     volume = pygame.mixer.music.get_volume()

@@ -1,8 +1,9 @@
 import pygame
 import os   # regelt filesystem voor get_image
 import random
-import sys
+import time
 import eztext
+import psycopg2
 pygame.init()
 display_width = 800
 display_height = 600
@@ -13,45 +14,199 @@ tint_red = (200, 0, 0)
 red = (255, 0, 0)
 tint_green = (0, 200, 0)
 green = (0, 255, 0)
+tint_blue = (0, 0, 200)
 blue = (0,0,255)
 grey = (128,128,128)
-colors = [red,green,blue,black]
+#Kleuren voor speler selectie
+r = [255,0,0,255,255,0,0]
+g = [0,255,0,255,0,255,0]
+b = [0,0,255,0,255,255,0]
+combined = (r,g,b)
+#------------------------------------------------------
 #globals
 intro, Introduction, gameExit,playing, players, throwdice = True, False, False, False, False, 0
 gameDisplay = pygame.display.set_mode((display_width, display_height))  #init resolution
 pygame.display.set_caption('Name')  #window naam
 clock = pygame.time.Clock()     #nodig voor Refresh Rate
 _image_library = {}     #global list
+#Database
+def db():
+    # Connect to an existing database
+    conn = psycopg2.connect("dbname=Project2 user=postgres password=wachtwoord")
 
-class player(object):
-    def __init__(self,name,score,color,gridx,gridy,turn):
+    # Open a cursor to perform database operations
+    cur = conn.cursor()
+
+    cur.execute("SELECT * FROM Players")
+    # fetch all of the rows from the query
+    data = cur.fetchall ()
+# print the rows
+    for row in data :
+        print("Naam",row[0], "Wins",row[1], "Losses",row[2])
+        pygame.display.flip()
+        cur.close()
+
+    conn.commit()
+
+    # Close communication with the database
+    cur.close()
+    conn.close()
+#------------------------------------------------------
+class player(object): #Klasse speler
+    def __init__(self,name,score,r,g,b,gridx,gridy,turn):
         self.name = name
         self.score = score
-        self.color = color
+        self.r = r
+        self.g = g
+        self.b = b
+        self.color = (r,g,b)
         self.gridx = gridx
         self.gridy = gridy
         self.idx = 0
         self.turn = False
-        self.txtbx = eztext.Input(x=35, y=250,maxlength=45, color=(255, 0, 0), prompt='Name: ')
+    def nameinput(self,x,y): #Naam input tekenen
+        self.txtbx = eztext.Input(x=x, y=y,maxlength=45, color=(255, 0, 0), prompt='Name: ')
         self.txtbx.value = self.name
-    def move(self,x,y):
+    def move(self,x,y): #Beweeg de pion
         self.gridx += x
         self.gridy += y
-    def score(self,points):
+    def score(self,points): #Pas de score aan
         self.score += points
-    def draw(self):
-        pygame.draw.rect(gameDisplay, self.color, (self.gridx, self.gridy, 55, 55))
+    def draw(self): #Teken de pion
+        pygame.draw.rect(gameDisplay, (self.color), (self.gridx, self.gridy, 55, 55))
+    #Kleur veranderen
+    def addr(self):
+        self.r = self.r + 1
+        if self.r < 0:
+            self.r = 255
+        if self.r > 255:
+            self.r = 0
+        self.color = (self.r,self.g,self.b)
+    def subr(self):
+        self.r = self.r - 1
+        if self.r < 0:
+            self.r = 255
+        if self.r > 255:
+            self.r = 0
+        self.color = (self.r,self.g,self.b)
+    def addb(self):
+        self.b = self.b + 1
+        if self.b < 0:
+            self.b = 255
+        if self.b > 255:
+            self.b = 0
+        self.color = (self.r,self.g,self.b)
+    def subb(self):
+        self.b = self.b - 1
+        if self.b < 0:
+            self.b = 255
+        if self.b > 255:
+            self.b = 0
+        self.color = (self.r,self.g,self.b)
+    def addg(self):
+        self.g = self.g + 1
+        if self.g < 0:
+            self.g = 255
+        if self.g > 255:
+            self.g = 0
+        self.color = (self.r,self.g,self.b)
+    def subg(self):
+        self.g = self.g - 1
+        if self.g < 0:
+            self.g = 255
+        if self.g > 255:
+            self.g = 0
+        self.color = (self.r,self.g,self.b)
     def changecolor(self):
-        thiselem = colors[self.idx]
-        self.idx = (self.idx + 1) % len(colors)
-        nextelem = colors[self.idx]
+        thiselem = (r[self.idx],g[self.idx],b[self.idx])
+        self.idx = (self.idx + 1) % len(r)
+        nextelem = r[self.idx]
         self.color = thiselem
+#------------------------------------------------------
 
-player1 = player("Henkie", 0, green, 70, 300,0)
-player2 = player("Hankie", 0, black, 270, 300,0)
-player3 = player("Penkie", 0, blue, 470, 300,0)
-player4 = player("Shanghai", 0, red, 670, 300,0)
+class dice(object): #Klasse dobbelsteen
+    def __init__(self,x,y, num):
+        self.x = x
+        self.y = y
+        self.num = num
+        self.duration = 0
+    def randomnum(self): #Kies een random nummer
+        self.num = random.randint(self.x,self.y)
 
+    def throw(self): #Gooi de dobbelsteen
+        while self.duration < random.randint(5,15):
+            self.num = random.randint(self.x, self.y)
+            gameDisplay.blit(get_image("img/" + str(self.num) + ".png"), (100, 100))
+            self.duration = self.duration + 1
+            pygame.display.flip()
+            print(str(self.duration))
+            time.sleep(0.05)
+        self.duration = 20
+        while self.duration < random.randint(20,28):
+            self.num = random.randint(self.x, self.y)
+            gameDisplay.blit(get_image("img/" + str(self.num) + ".png"), (100, 100))
+            self.duration = self.duration + 1
+            pygame.display.flip()
+            print(str(self.duration))
+            time.sleep(0.2)
+        self.duration = 30
+        while self.duration < random.randint(30,32):
+            self.num = random.randint(self.x, self.y)
+            gameDisplay.blit(get_image("img/" + str(self.num) + ".png"), (100, 100))
+            self.duration = self.duration + 1
+            pygame.display.flip()
+            print(str(self.duration))
+            time.sleep(0.5)
+        self.duration = 40
+        while self.duration == 40:
+            gameDisplay.blit(get_image("img/" + str(self.num) + ".png"), (100, 100))
+            pygame.display.flip()
+            time.sleep(2)
+            self.duration = 50
+        if self.duration == 50:
+            self.duration = 0
+            return
+
+#Spelers defineren
+player1 = player("Henkie", 0, 0,255,0, 70, 220,0)
+player2 = player("Hankie", 0, 255,255,0, 270, 220,0)
+player3 = player("Penkie", 0, 0,0,255, 470, 220,0)
+player4 = player("Shanghai", 0, 255,0,0, 670, 220,0)
+#Pion defineren
+dice1 = dice(1,6,1)
+
+
+
+
+#Tijdelijke code voor aanpassen wie er aan de beurt is
+def turnforward():
+    if player1.turn == True:
+        player1.turn = False
+        player2.turn = True
+    elif player2.turn == True:
+        player2.turn = False
+        player3.turn = True
+    elif player3.turn == True:
+        player3.turn = False
+        player4.turn = True
+    elif player4.turn == True:
+        player4.turn = False
+        player1.turn = True
+
+def turnbackward():
+    if player1.turn == True:
+        player1.turn = False
+        player4.turn = True
+    elif player2.turn == True:
+        player2.turn = False
+        player1.turn = True
+    elif player3.turn == True:
+        player3.turn = False
+        player2.turn = True
+    elif player4.turn == True:
+        player4.turn = False
+        player3.turn = True
+#------------------------------------------------------
 def get_image(path):    #functie om een foto te tonen
         global _image_library
         image = _image_library.get(path)
@@ -81,9 +236,10 @@ def text_objects(text, font):   #functie om tekst te tonen
 
 def game_intro():   #main menu scherm
     Instruction, Intro, Players = False, True, False
+    player1.turn = True
+    player2.turn, player3.turn, player4.turn = False, False, False
     # ohgodwhy
     x, y, mov_x, mov_y = 0,0,7,7
-    print (player1.name)
     while intro:
         x += mov_x
         y += mov_y
@@ -103,8 +259,9 @@ def game_intro():   #main menu scherm
         TextRect.center = ((display_width / 2), (display_height / 4))
         gameDisplay.blit(TextSurf, TextRect)
         button("Start", 50, 250, 700, 50, tint_green, green, players)
-        button("Instruction", 50, 350, 700, 50, tint_green, green, game_instructions)
-        button("Quit", 50, 450, 700, 50, tint_red, red, quit)
+        button("Instruction", 50, 350, 700, 50, tint_green, green, dice1.throw)
+        button("Highscore", 50, 450, 700, 50, tint_green, green, game_highscore)
+        button("Quit", 50, 550, 700, 50, tint_red, red, quit)
         clock.tick(60)      #refresh rate 60 voor smooth ball movement
         pygame.display.flip()
 
@@ -135,29 +292,172 @@ def players(): #speler keuze scherm
         player3.draw()
         player4.draw()
         clock.tick(15)  #refresh rate van 15
-        largeText = pygame.font.SysFont("freesansbold.ttf", 115)
-        TextSurf, TextRect = text_objects("Speler 1", largeText)
-        TextRect.center = ((display_width / 2), (display_height / 4))
-        gameDisplay.blit(TextSurf, TextRect)
-        player1.txtbx.update(events)
-        player1.txtbx.draw(gameDisplay)
-        player1.name = player1.txtbx.value
-        button(str(player1.color), 35, 380, 100, 50, tint_green, green, player1.changecolor)
+        if player1.turn == True:
+            largeText = pygame.font.SysFont("freesansbold.ttf", 115)
+            TextSurf, TextRect = text_objects("Player 1", largeText)
+            TextRect.center = ((display_width / 2), (display_height / 4))
+            player1.nameinput(35,190)
+            player1.txtbx.update(events)
+            player1.txtbx.draw(gameDisplay)
+            player1.name = player1.txtbx.value
+            gameDisplay.blit(TextSurf, TextRect)
+            button(str(player1.color), 45, 300, 110, 50, tint_green, green, player1.changecolor)
+            button("+", 45, 360, 30, 30, tint_red, red, player1.addr)
+            button("-", 45, 400, 30, 30, tint_red, red, player1.subr)
+            button("+", 85, 360, 30, 30, tint_green, green, player1.addg)
+            button("-", 85, 400, 30, 30, tint_green, green, player1.subg)
+            button("+", 125, 360, 30, 30, tint_blue, blue, player1.addb)
+            button("-", 125, 400, 30, 30, tint_blue, blue, player1.subb)
+            button("Next Player", 25, 440, 150, 50, tint_green, green, turnforward)
+            button("Back", 50, 500, 700, 50, tint_green, green, game_intro)
+        elif player2.turn == True:
+            largeText = pygame.font.SysFont("freesansbold.ttf", 115)
+            TextSurf, TextRect = text_objects("Player 2", largeText)
+            TextRect.center = ((display_width / 2), (display_height / 4))
+            player2.nameinput(235,190)
+            player2.txtbx.update(events)
+            player2.txtbx.draw(gameDisplay)
+            player2.name = player2.txtbx.value
+            gameDisplay.blit(TextSurf, TextRect)
+            smallText = pygame.font.SysFont("freesansbold.ttf", 32)
+            textSurf, textRect = text_objects(player1.name, smallText)
+            textRect = (35,190)
+            gameDisplay.blit(textSurf, textRect)
+            button(str(player2.color), 245, 300, 110, 50, tint_green, green, player2.changecolor)
+            button("+", 245, 360, 30, 30, tint_red, red, player2.addr)
+            button("-", 245, 400, 30, 30, tint_red, red, player2.subr)
+            button("+", 285, 360, 30, 30, tint_green, green, player2.addg)
+            button("-", 285, 400, 30, 30, tint_green, green, player2.subg)
+            button("+", 325, 360, 30, 30, tint_blue, blue, player2.addb)
+            button("-", 325, 400, 30, 30, tint_blue, blue, player2.subb)
+            button("Next Player", 225, 440, 150, 50, tint_green, green, turnforward)
+            button("Back", 50, 500, 700, 50, tint_green, green, turnbackward)
+        elif player3.turn == True:
+            largeText = pygame.font.SysFont("freesansbold.ttf", 115)
+            TextSurf, TextRect = text_objects("Player 3", largeText)
+            TextRect.center = ((display_width / 2), (display_height / 4))
+            player3.nameinput(435,190)
+            player3.txtbx.update(events)
+            player3.txtbx.draw(gameDisplay)
+            player3.name = player3.txtbx.value
+            gameDisplay.blit(TextSurf, TextRect)
+            smallText = pygame.font.SysFont("freesansbold.ttf", 32)
+            textSurf1, textRect1 = text_objects(player1.name, smallText)
+            textRect1 = (35,190)
+            textSurf2, textRect2 = text_objects(player2.name, smallText)
+            textRect2 = (235,190)
+            gameDisplay.blit(textSurf, textRect)
+            gameDisplay.blit(textSurf2, textRect2)
+            button(str(player3.color), 445, 300, 110, 50, tint_green, green, player3.changecolor)
+            button("+", 445, 360, 30, 30, tint_red, red, player3.addr)
+            button("-", 445, 400, 30, 30, tint_red, red, player3.subr)
+            button("+", 485, 360, 30, 30, tint_green, green, player3.addg)
+            button("-", 485, 400, 30, 30, tint_green, green, player3.subg)
+            button("+", 525, 360, 30, 30, tint_blue, blue, player3.addb)
+            button("-", 525, 400, 30, 30, tint_blue, blue, player3.subb)
+            button("Next Player", 425, 440, 150, 50, tint_green, green, turnforward)
+            button("Back", 50, 500, 700, 50, tint_green, green, turnbackward)
+        elif player4.turn == True:
+            largeText = pygame.font.SysFont("freesansbold.ttf", 115)
+            TextSurf, TextRect = text_objects("Player 4", largeText)
+            TextRect.center = ((display_width / 2), (display_height / 4))
+            player4.nameinput(635,190)
+            player4.txtbx.update(events)
+            player4.txtbx.draw(gameDisplay)
+            player4.name = player4.txtbx.value
+            gameDisplay.blit(TextSurf, TextRect)
+            smallText = pygame.font.SysFont("freesansbold.ttf", 32)
+            textSurf1, textRect1 = text_objects(player1.name, smallText)
+            textRect1 = (35,190)
+            textSurf2, textRect2 = text_objects(player2.name, smallText)
+            textRect2 = (235,190)
+            textSurf3, textRect3 = text_objects(player3.name, smallText)
+            textRect3 = (435,190)
+            gameDisplay.blit(textSurf, textRect)
+            gameDisplay.blit(textSurf2, textRect2)
+            gameDisplay.blit(textSurf3, textRect3)
+            button(str(player4.color), 645, 300, 110, 50, tint_green, green, player4.changecolor)
+            button("+", 645, 360, 30, 30, tint_red, red, player4.addr)
+            button("-", 645, 400, 30, 30, tint_red, red, player4.subr)
+            button("+", 685, 360, 30, 30, tint_green, green, player4.addg)
+            button("-", 685, 400, 30, 30, tint_green, green, player4.subg)
+            button("+", 725, 360, 30, 30, tint_blue, blue, player4.addb)
+            button("-", 725, 400, 30, 30, tint_blue, blue, player4.subb)
+            button("Play", 625, 440, 150, 50, tint_green, green, game_main)
+            button("Back", 50, 500, 700, 50, tint_green, green, turnbackward)
+        pygame.display.flip()
+
+def game_highscore():    #Highscore scherm
+    # Connect to an existing database
+    conn = psycopg2.connect("dbname=Project2 user=postgres password=wachtwoord")
+
+    # Open a cursor to perform database operations
+    cur = conn.cursor()
+    cur.execute("UPDATE Players SET wins = wins +1 WHERE naam = 'Penkie'")
+    cur.execute("SELECT * FROM Players")
+    # fetch all of the rows from the query
+    data = cur.fetchall ()
+# print the rows
+    for row in data :
+        print("Naam",row[0], "Wins",row[1], "Losses",row[2])
+        pygame.display.flip()
+        cur.close()
+
+    conn.commit()
+
+    # Close communication with the database
+    cur.close()
+    conn.close()
+
+    Highscore, Intro = True, False
+    while Highscore:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                quit()
+        gameDisplay.fill(white)
+        count = 0
+        smallText = pygame.font.Font("freesansbold.ttf", 40)
+        textSurf, textRect = text_objects("Name", smallText)
+        textRect.center = (400, 250)
+        gameDisplay.blit(textSurf, textRect)
+        smallText = pygame.font.Font("freesansbold.ttf", 40)
+        textSurf, textRect = text_objects("Wins", smallText)
+        textRect.center = (550, 250)
+        gameDisplay.blit(textSurf, textRect)
+        smallText = pygame.font.Font("freesansbold.ttf", 40)
+        textSurf, textRect = text_objects("Losses", smallText)
+        textRect.center = (700, 250)
+        gameDisplay.blit(textSurf, textRect)
+        for row in data:
+            count += 1
+            smallText = pygame.font.Font("freesansbold.ttf", 40)
+            textSurf, textRect = text_objects(row[0], smallText)
+            textRect.center = (400, (250 + (count * 50)))
+            gameDisplay.blit(textSurf, textRect)
+
+            smallText = pygame.font.Font("freesansbold.ttf", 40)
+            textSurf, textRect = text_objects(str(row[1]), smallText)
+            textRect.center = (550, (250 + (count * 50)))
+            gameDisplay.blit(textSurf, textRect)
+
+            smallText = pygame.font.Font("freesansbold.ttf", 40)
+            textSurf, textRect = text_objects(str(row[2]), smallText)
+            textRect.center = (650, (250 + (count * 50)))
+            gameDisplay.blit(textSurf, textRect)
         button("Back", 50, 500, 700, 50, tint_green, green, game_intro)
-        button("Continue", 50, 440, 700, 50, tint_green, green, game_main)
+        clock.tick(15)  #refresh rate van 15
         pygame.display.flip()
 
 def drawplayers():
-    player1 = player("Henkie", 0, green, 75, 30,0)
-    player2 = player("Hankie", 0, black, 75, 170,0)
-    player3 = player("Penkie", 0, blue, 75, 310,0)
-    player4 = player("Shanghai", 0, red, 75, 450,0)
+    player1 = player("Henkie", 0, 0,255,0, 75, 30,0)
+    player2 = player("Hankie", 0, 255,255,0, 75, 170,0)
+    player3 = player("Penkie", 0, 0,0,255, 75, 310,0)
+    player4 = player("Shanghai", 0, 255,0,0, 75, 450,0)
     player1.draw()
     player2.draw()
     player3.draw()
     player4.draw()
-
-#def button(msg,x,y,w,h,ic,ac,action=None):          #functie om een knop te maken (text,x,y,width,height,kleur, hover kleur, actie)
 
 def game_main():    #hoofd gamescherm
     Players, Playing = False, True
@@ -175,14 +475,15 @@ def game_main():    #hoofd gamescherm
         button(None, 0, 0, 200, 800, grey, grey, None)
         button(None, 600, 0, 200 ,800, grey, grey, None)
         drawplayers()
-
         pygame.display.flip()
 
-#    def __init__(self,name,score,color,gridx,gridy,turn):
+
 
 #roep de schermen op
 game_intro()
 game_instructions()
 game_main()
+game_highscore()
 players()
+
 quit()

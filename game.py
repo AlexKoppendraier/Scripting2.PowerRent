@@ -5,6 +5,7 @@ import time
 import eztext
 import psycopg2
 pygame.init()
+pygame.mixer.music.load("Salty_Ditty.wav")
 display_width = 800
 display_height = 600
 #kleuren
@@ -16,7 +17,6 @@ tint_green = (0, 200, 0)
 green = (0, 255, 0)
 tint_blue = (0, 0, 200)
 blue = (0,0,255)
-grey = (128,128,128)
 #Kleuren voor speler selectie
 r = [255,0,0,255,255,0,0]
 g = [0,255,0,255,0,255,0]
@@ -239,11 +239,11 @@ def game_intro():   #main menu scherm
     player1.turn = True
     player2.turn, player3.turn, player4.turn = False, False, False
     # ohgodwhy
-    x, y, mov_x, mov_y = 0,0,7,7
+    x, y, mov_x, mov_y = 0,0,6,6
     while intro:
         x += mov_x
         y += mov_y
-        if y > 200 or y < 0:
+        if y > 180 or y < 0:
             mov_y = mov_y * -1
         if x > 750 or x < 0:
             mov_x = mov_x * -1
@@ -258,10 +258,12 @@ def game_intro():   #main menu scherm
         TextSurf, TextRect = text_objects("Titel", largeText)
         TextRect.center = ((display_width / 2), (display_height / 4))
         gameDisplay.blit(TextSurf, TextRect)
-        button("Start", 50, 250, 700, 50, tint_green, green, players)
-        button("Instruction", 50, 350, 700, 50, tint_green, green, dice1.throw)
-        button("Highscore", 50, 450, 700, 50, tint_green, green, game_highscore)
-        button("Quit", 50, 550, 700, 50, tint_red, red, quit)
+        button("Start", 50, 230, 700, 50, tint_green, green, players)
+        button("Instruction", 50, 305, 700, 50, tint_green, green, dice1.throw)
+        button("Options",50,380,700,50,tint_green, green, game_options)
+        button("Highscore", 50, 455, 700, 50, tint_green, green, game_highscore)
+        button("Quit", 50, 530, 700, 50, tint_red, red, quit)
+
         clock.tick(60)      #refresh rate 60 voor smooth ball movement
         pygame.display.flip()
 
@@ -448,17 +450,23 @@ def game_highscore():    #Highscore scherm
         button("Back", 50, 500, 700, 50, tint_green, green, game_intro)
         clock.tick(15)  #refresh rate van 15
         pygame.display.flip()
-
-def drawplayers():
-    player1 = player("Henkie", 0, 0,255,0, 75, 30,0)
-    player2 = player("Hankie", 0, 255,255,0, 75, 170,0)
-    player3 = player("Penkie", 0, 0,0,255, 75, 310,0)
-    player4 = player("Shanghai", 0, 255,0,0, 75, 450,0)
-    player1.draw()
-    player2.draw()
-    player3.draw()
-    player4.draw()
-
+def game_options():  #opties menu
+    Instruction, Intro = True, False
+    while Instruction:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                quit()
+        gameDisplay.fill(white)
+        button("Sound off", 50, 130, 350, 50, tint_green, green, quit)
+        button("Sound on", 400, 130, 350, 50, tint_green, green, quit)
+        button("Volume down", 50, 230, 350, 50, tint_green, green, quit)
+        button("Volume up", 400, 230, 350, 50, tint_green, green, quit)
+        button("Back", 50, 500, 700, 50, tint_red, red, game_intro)
+        clock.tick(15)  #refresh rate van 15
+        pygame.display.flip()
+def sound_off():
+    
 def game_main():    #hoofd gamescherm
     Players, Playing = False, True
     while Playing:
@@ -468,18 +476,11 @@ def game_main():    #hoofd gamescherm
                 quit()
         gameDisplay.fill(white)
         clock.tick(15)  #refresh rate van 15
-        gameDisplay.blit(get_image('euromastbr.png'), (0, 0))
-        gameDisplay.blit(get_image('euromastrb.png'), (0, 0))
-        gameDisplay.blit(get_image('euromastgy.png'), (0, 0))
-        gameDisplay.blit(get_image('euromastyg.png'), (0, 0))
-        button(None, 0, 0, 200, 800, grey, grey, None)
-        button(None, 600, 0, 200 ,800, grey, grey, None)
-        drawplayers()
         pygame.display.flip()
 
 
 
-#roep de schermen op
+pygame.mixer.music.play(-1)#roep de schermen op
 game_intro()
 game_instructions()
 game_main()

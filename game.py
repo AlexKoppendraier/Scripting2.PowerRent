@@ -258,6 +258,9 @@ def game_intro():   #main menu scherm
     player2.turn, player3.turn, player4.turn = False, False, False
     # ohgodwhy
     x, y, mov_x, mov_y = 0,0,6,6
+    display_width = 800
+    display_height = 600
+    gameDisplay = pygame.display.set_mode((display_width, display_height))  # init resolution
     while intro:
         x += mov_x
         y += mov_y
@@ -547,10 +550,55 @@ def drawplayers():
     gameDisplay.blit(textSurf6, textRect6)
     gameDisplay.blit(textSurf7, textRect7)
     gameDisplay.blit(textSurf8, textRect8)
-def game_main():    #hoofd gamescherm
+def pop_up():
+    pause = 0
+    tut = 0
+    for event in pygame.event.get():
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_ESCAPE:
+                pause = 1
+                tut = 0
+            if event.key == pygame.K_RETURN:
+                tut = 1
+                pause = 0
+    while tut == 1:
+        for event in pygame.event.get():
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_RETURN:
+                    tut = 0
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                quit()
+        gameDisplay.fill(white)
+        gameDisplay.blit(get_image('tutorial.png'), (0, 0))
+        pygame.display.flip()
+    while pause == 1:
+        for event in pygame.event.get():
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    pause = 0
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                quit()
+        gameDisplay.fill(white)
+        button("Sound off", 50, 130, 350, 50, tint_green, green, sound_off)
+        button("Sound on", 400, 130, 350, 50, tint_green, green, sound_on)
+        button("Volume down", 50, 230, 350, 50, tint_green, green, volumedown)
+        button("Volume up", 400, 230, 350, 50, tint_green, green, volumeup)
+        button("Quit", 50, 500, 700, 50, tint_red, red, game_intro)
+        currentvolume = pygame.mixer.music.get_volume()
+        smallText = pygame.font.Font("freesansbold.ttf", 40)
+        textSurf, textRect = text_objects(str(round(currentvolume,1)), smallText)
+        textRect.center = (400, 350)
+        gameDisplay.blit(textSurf, textRect)
+        clock.tick(15)  #refresh rate van 15
+        pygame.display.flip()
+
+
+def game_main():    #hoofd gamescher
     Players, Playing = False, True
     startinit = 1
-    reset = 0
+    pause = False
     turn = 2
     helpertext = ""
     display_width = 1024
@@ -567,6 +615,7 @@ def game_main():    #hoofd gamescherm
                 quit()
         gameDisplay.fill(white)
         clock.tick(15)  #refresh rate van 15
+        pop_up()
         drawgamescreen()
 
         smallText = pygame.font.SysFont("freesansbold.ttf", 32)
@@ -602,9 +651,6 @@ def game_main():    #hoofd gamescherm
                 button("Boven", 350, 640, 100, 50, tint_green, green, dice1.throw, turnforward)
                 button("Beneden", 500, 640, 100, 50, tint_green, green, dice1.throw, turnforward)
         pygame.display.flip()
-
-
-
 #roep de schermen op
 pygame.mixer.music.play(-1)
 game_intro()
@@ -612,5 +658,6 @@ game_instructions()
 game_main()
 game_highscore()
 players()
+pausemenu()
 
 quit()

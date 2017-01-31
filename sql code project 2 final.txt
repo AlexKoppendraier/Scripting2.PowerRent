@@ -1,0 +1,41 @@
+create table Questions(
+id int, question varchar, answer1 varchar, answer2 varchar, answer3 varchar, correctanswer varchar,id_cat int,
+primary key (id))
+
+create table category(
+    id_cat int, name varchar, primary key(id_cat))
+
+
+--------------------------------------------------------------------------------------------------------------------------------
+
+INSERT INTO questions VALUES 
+(1,'Which work of art is also called the Dutch Sistine chapel?','Kubus woningen','Beurs','Maritiem museum','De Markthal',1),
+(2,'What is on the upper floor of the martkhal?','Air','More Stores','Storage for the stores', 'luxurious apartments',1),
+(3,'Which famous statue is a symbol of post war Rotterdam?','De gestileerdebloem','Kabouter buttplug','De velvaart','De verwoeste stad',1),
+(4, 'Which street sign  is stolen the most?','Witte de Withstraat','Blaak', 'Weena','Ajax-straat',1),
+(5, 'Which well known zoo is located in Rotterdam Noord?','Apenheul','Ouwehands Dierenpark','Dierenpark Emmen','Diergaarde Blijdorp',1)
+;
+--------------------------------------------------------------------------------------------------------------------------------
+INSERT INTO questions VALUES 
+(6,'What is the purpose of the Rotterdam stadion train stop?','To have more train stops than Amsterdam','For the visitors of the movie theatre', 'for discount sundays','For the supporters of Feyenoord',2),
+(7,'how many soccer teams does Rotterdam have?','2','4','5','3',2),
+(8,'What is the most popular way of exercising in rotterdam?', 'Soccer','Basketball','Draughts','Fitness',2),
+(9,'Which soccer team has had the most wins in a season?','Sparta','Excelsior', 'Ajax','Feyenoord',2),
+(10,'Wich age catergory is the most active?','19 to 24','13 to 18','65 and higher','6 to 12',2)
+;
+--------------------------------------------------------------------------------------------------------------------------------
+INSERT INTO questions VALUES 
+(11,'How many metro stations does rotterdam have?','42 stations','53 stations','367 station','62 stations','3'),
+(12,'What is the meaning of the abbreviation RET?','Rotterdam entertainment trein','Rotterdamse openbare metro','Openbaar zwembad schiedam','Rotterdamse elektronische tram', 3),
+(13,'What is the busiest train station of rotterdam?','Dordrecht station','Blaak','Rotterdam zuid','Rotterdam centraal',3),
+(14,'Which city is not near Rotterdam?','Delft','Gouda','Den haag','Eindhoven',3),
+(15,'Which river runs through Rotterdam?','Gwen Maas','Oude Maas','De Maas van gemiddeld leeftijd','Nieuwe maas',3)   
+;
+--------------------------------------------------------------------------------------------------------------------------------
+INSERT INTO questions VALUES
+(16,'Due to which country did Rotterdam lost its position as biggest port?','Belgium','Switserland','Mexico','China',4),
+(17,'What is the reason behind the growth of Rotterdam?','By eating his vegetables','Cattlebreeding','Immigration','The Port',4),
+(18,'What did Rotterdam chose to do after World war2?','Rebuilding the downtown','Ask help from other cities','All of the answers','To renew downtown',4),
+(19,'From which century did the name Rotterdam come from ?','14th century','15th century','21st century','13th century',4),
+(20,'Which of these names has not been a nickname for Rotterdam?','De verwoeste stad','De werkstad','Euromast','Havenstad',4)
+;

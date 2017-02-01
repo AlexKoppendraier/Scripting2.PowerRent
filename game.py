@@ -4,6 +4,7 @@ import random
 import time
 import eztext
 import psycopg2
+import math
 pygame.init()
 pygame.mixer.music.load("Salty_Ditty.wav")
 display_width = 800
@@ -26,7 +27,7 @@ b = [0,0,255,0,255,255,0]
 combined = (r,g,b)
 #------------------------------------------------------
 #globals
-intro, Introduction, gameExit,playing, players, throwdice = True, False, False, False, False, 0
+intro, Introduction, gameExit,playing, players, throwdice, Options, Questions,Winning = True, False, False, False, False, 0, False, False, False
 gameDisplay = pygame.display.set_mode((display_width, display_height))  #init resolution
 pygame.display.set_caption('Name')  #window naam
 clock = pygame.time.Clock()     #nodig voor Refresh Rate
@@ -62,24 +63,81 @@ class player(object): #Klasse speler
         self.g = g
         self.b = b
         self.dicenum = "5"
+        self.movement = int(self.dicenum)
         self.color = (r,g,b)
         self.gridx = gridx
         self.gridy = gridy
         self.idx = 0
+        self.winner = 1
         self.turn = False
+        self.position = 1
     def nameinput(self,x,y): #Naam input tekenen
         self.txtbx = eztext.Input(x=x, y=y,maxlength=45, color=(255, 0, 0), prompt='Name: ')
         self.txtbx.value = self.name
     def changepos(self,x,y): #Beweeg de pion
         self.gridx = x
         self.gridy = y
+    def moveright(self):
+        self.movement = int(self.dicenum)
+        while self.movement > 0:
+            if self.position < 8:
+                if self.position % 2 == 1:
+                    self.gridx += 40
+                elif self.position % 2 == 0:
+                    self.gridx += 160
+                self.position += 1
+            elif self.position == 8:
+                self.gridx = 65
+                self.position = 1
+            self.movement -= 1
+            time.sleep(0.4)
+            self.dicenum = str(self.movement)
+    def moveleft(self):
+        self.movement = int(self.dicenum)
+        while self.movement > 0:
+            if self.position > 1:
+                if self.position % 2 == 1:
+                    self.gridx -= 160
+                elif self.position % 2 == 0:
+                    self.gridx -= 40
+                self.position -= 1
+            elif self.position == 1:
+                self.gridx = 705
+                self.position = 8
+            self.movement -= 1
+            time.sleep(0.4)
+            self.dicenum = str(self.movement)
+    def moveup(self):
+        self.movement = int(self.dicenum)
+        while self.movement > 0:
+            if self.position < 9:
+                self.gridy -= 24
+            elif self.movement == 9:
+                if self.position % 2 == 1:
+                    self.gridx += 20
+                elif self.position % 2 == 0:
+                    self.gridx -= 20
+                self.gridy -= 110
+            elif self.position > 9 and self.position < 14:
+                self.gridy -= 39
+            elif self.position == 14:
+                self.gridy -= 42
+            self.position += 1
+            self.movement -= 1
+            time.sleep(0.4)
+            self.dicenum = str(self.movement)
+
     def move(self,x,y): #Beweeg de pion
         self.gridx += x
         self.gridy += y
     def score(self,points): #Pas de score aan
         self.score += points
+    def drawside(self,x,y): #Teken de pion
+        pygame.draw.rect(gameDisplay, (self.color), (x, y, 55, 55))
     def draw(self): #Teken de pion
         pygame.draw.rect(gameDisplay, (self.color), (self.gridx, self.gridy, 55, 55))
+    def drawsmall(self): #Teken de pion
+        pygame.draw.rect(gameDisplay, (self.color), (self.gridx, self.gridy, 30, 30))
     #Kleur veranderen
     def addr(self):
         self.r = self.r + 1
@@ -139,7 +197,7 @@ class dice(object): #Klasse dobbelsteen
     def randomnum(self): #Kies een random nummer
         self.num = random.randint(self.x,self.y)
 
-    def throw(self): #Gooi de dobbelsteen
+    def throw(self): #throw the dice
         while self.duration < random.randint(5,15):
             self.num = random.randint(self.x, self.y)
             gameDisplay.blit(get_image("img/" + str(self.num) + ".png"), (860, 20))
@@ -171,25 +229,69 @@ class dice(object): #Klasse dobbelsteen
             self.duration = 50
         if self.duration == 50:
             if player1.turn == True and player2.turn == False:
-                player1.dicenum = str(self.num)
+                player1.dicenum = str(math.ceil(self.num / 2))
             elif player2.turn == True and player3.turn == False:
-                player2.dicenum = str(self.num)
+                player2.dicenum = str(math.ceil(self.num / 2))
             elif player3.turn == True and player4.turn == False:
-                player3.dicenum = str(self.num)
+                player3.dicenum = str(math.ceil(self.num / 2))
             elif player4.turn == True and player1.turn == False:
-                player4.dicenum = str(self.num)
+                player4.dicenum = str(math.ceil(self.num / 2))
             self.duration = 0
             return
 
 #Spelers defineren
-player1 = player("Henkie", 0, 0,255,0, 70, 220,0)
+player1 = player("Henkie", 13, 0,255,0, 70, 220,0)
 player2 = player("Hankie", 0, 255,255,0, 270, 220,0)
 player3 = player("Penkie", 0, 0,0,255, 470, 220,0)
 player4 = player("Shanghai", 0, 255,0,0, 670, 220,0)
 #Pion defineren
 dice1 = dice(1,6,0)
 
+def callquestion():
+    callquestion.list = ""
+    try:
+        conn = psycopg2.connect("dbname=Project2 user=postgres password=wachtwoord")
+    except:
+        print('Can\'t connect')
+    cur = conn.cursor()
+    cur.execute("SELECT * from questions order by RANDOM() limit 1")
+    check = 1
+    rows = cur.fetchall ()
+    cur.close()
+    conn.commit()
+    for row in rows:
+            callquestion.list = row
 
+def questiontrue():
+    game_main.question = 1
+    print(game_main.question)
+
+def questionview():
+    print(game_main.question)
+    while game_main.question == 1:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                quit()
+        gameDisplay.fill(white)
+        drawgamescreen()
+        drawplayers()
+        questionview.list = callquestion.list
+        print(questionview.list)
+        x = str(questionview.list[1])
+        pygame.draw.rect(gameDisplay, (128,128,128), (100,100, 600, 300))
+        Text = pygame.font.SysFont("freesansbold.ttf", 22)
+        TextSurf, TextRect = text_objects(x,Text)
+        TextRect.center = ((display_width / 2), (display_height / 4))
+        gameDisplay.blit(TextSurf, TextRect)
+        button(str(questionview.list[2]), 115, 250, 275, 50, tint_green, red, wrong)
+        button(str(questionview.list[3]), 410, 250, 275, 50, tint_green, red, wrong)
+        button(str(questionview.list[4]), 115, 325, 275, 50, tint_green, red, wrong)
+        button(str(questionview.list[5]), 410, 325, 275, 50, tint_green, red, right)
+        clock.tick(15)  #refresh rate van 15
+        pygame.display.flip()
+    else:
+        return
 
 
 #Tijdelijke code voor aanpassen wie er aan de beurt is
@@ -206,6 +308,8 @@ def turnforward():
     elif player4.turn == True:
         player4.turn = False
         player1.turn = True
+        game_main.turn = game_main.turn + 1
+    game_main.part = 1
 
 def turnbackward():
     if player1.turn == True:
@@ -220,6 +324,7 @@ def turnbackward():
     elif player4.turn == True:
         player4.turn = False
         player3.turn = True
+    game_main.part = 1
 #------------------------------------------------------
 def get_image(path):    #functie om een foto te tonen
         global _image_library
@@ -276,10 +381,10 @@ def game_intro():   #main menu scherm
         gameDisplay.fill(white)
         gameDisplay.blit(get_image('logoball.png'), (x, y))
         largeText = pygame.font.SysFont("freesansbold.ttf", 115)
-        TextSurf, TextRect = text_objects("Titel", largeText)
+        TextSurf, TextRect = text_objects("Euromast", largeText)
         TextRect.center = ((display_width / 2), (display_height / 4))
         gameDisplay.blit(TextSurf, TextRect)
-        button("Start", 50, 230, 700, 50, tint_green, green, players)
+        button("Start", 50, 230, 700, 50, tint_green, green, game_main)
         button("Instruction", 50, 305, 700, 50, tint_green, green, game_instructions)
         button("Options",50,380,700,50,tint_green, green, game_options)
         button("Highscore", 50, 455, 700, 50, tint_green, green, game_highscore)
@@ -411,35 +516,6 @@ def players(): #speler keuze scherm
             button("Back", 50, 500, 700, 50, tint_green, green, turnbackward)
         pygame.display.flip()
 
-
-def question():
-    check = 0
-    if check == 0:
-        try:
-            conn = psycopg2.connect("dbname=Project2 user=postgres password=wachtwoord")
-        except:
-            print('Can\'t connect')
-        cur = conn.cursor()
-        cur.execute("SELECT * from questions order by RANDOM() limit 1")
-        check = 1
-    rows = cur.fetchall ()
-    cur.close()
-    conn.commit()
-    if check == 1:
-        for row in rows:
-                print(row)
-                x = str(row[1])
-                pygame.draw.rect(gameDisplay, (128,128,128), (100,100, 600, 300))
-                Text = pygame.font.SysFont("freesansbold.ttf", 22)
-                TextSurf, TextRect = text_objects(x,Text)
-                TextRect.center = ((display_width / 2), (display_height / 4))
-                gameDisplay.blit(TextSurf, TextRect)
-                button(str(row[2]), 115, 250, 275, 50, tint_green, red)
-                button(str(row[3]), 410, 250, 275, 50, tint_green, red)
-                button(str(row[4]), 115, 325, 275, 50, tint_green, red)
-                button(str(row[5]), 410, 325, 275, 50, tint_green, red)
-
-
 def game_highscore():    #Highscore scherm
     # Connect to an existing database
     conn = psycopg2.connect("dbname=Project2 user=postgres password=wachtwoord")
@@ -518,7 +594,6 @@ def game_options():  #opties menu
         smallText = pygame.font.Font("freesansbold.ttf", 40)
         textSurf, textRect = text_objects(str(round(currentvolume,1)), smallText)
         textRect.center = (400, 350)
-        question()
         gameDisplay.blit(textSurf, textRect)
         clock.tick(15)  #refresh rate van 15
         pygame.display.flip()
@@ -546,15 +621,10 @@ def drawgamescreen():
     pygame.draw.line(gameDisplay, black, (0, 600), (800, 600), 2)
     pygame.draw.rect(gameDisplay, lgrey, (0, 602, 1024, 200))
     pygame.draw.line(gameDisplay, black, (800, 0), (800, 700), 2)
-def drawplayers():
-    player1.changepos(890,220)
-    player2.changepos(890,330)
-    player3.changepos(890,440)
-    player4.changepos(890,550)
-    player1.draw()
-    player2.draw()
-    player3.draw()
-    player4.draw()
+    player1.drawside(890,220)
+    player2.drawside(890,330)
+    player3.drawside(890,440)
+    player4.drawside(890,550)
     smallText = pygame.font.SysFont("freesansbold.ttf", 32)
     textSurf1, textRect1 = text_objects(player1.name, smallText)
     textRect1 = (880, 190)
@@ -580,6 +650,11 @@ def drawplayers():
     gameDisplay.blit(textSurf6, textRect6)
     gameDisplay.blit(textSurf7, textRect7)
     gameDisplay.blit(textSurf8, textRect8)
+def drawplayers():
+    player1.drawsmall()
+    player2.drawsmall()
+    player3.drawsmall()
+    player4.drawsmall()
 def pop_up():
     pause = 0
     tut = 0
@@ -624,12 +699,98 @@ def pop_up():
         clock.tick(15)  #refresh rate van 15
         pygame.display.flip()
 
+def startcat1():
+    playernumber = str("player") + str(game_main.playerturn)
+    eval(playernumber).changepos(65,570)
+    game_main.cat1 = 1
 
+def startcat2():
+    playernumber = str("player") + str(game_main.playerturn)
+    eval(playernumber).changepos(265,570)
+    game_main.cat2 = 1
+
+def startcat3():
+    playernumber = str("player") + str(game_main.playerturn)
+    eval(playernumber).changepos(465,570)
+    game_main.cat3 = 1
+
+def startcat4():
+    playernumber = str("player") + str(game_main.playerturn)
+    eval(playernumber).changepos(665,570)
+    game_main.cat4 = 1
+
+def addpart():
+    game_main.part = game_main.part +1
+
+def wrong():
+    Text = pygame.font.SysFont("freesansbold.ttf", 40)
+    TextSurf, TextRect = text_objects("Incorrect", Text)
+    TextRect.center = ((display_width / 2), (200))
+    gameDisplay.blit(TextSurf, TextRect)
+    pygame.display.flip()
+    time.sleep(3)
+    turnforward()
+    game_main.question = 0
+
+def right():
+    Text = pygame.font.SysFont("freesansbold.ttf", 40)
+    TextSurf, TextRect = text_objects("Correct", Text)
+    TextRect.center = ((display_width / 2), (200))
+    gameDisplay.blit(TextSurf, TextRect)
+    pygame.display.flip()
+    time.sleep(3)
+    addpart()
+    game_main.question = 0
+def winscreen():
+    print("test")
+    Playing, Winning = False, True
+    while Winning:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                quit()
+        display_width = 800
+        display_height = 600
+        gameDisplay = pygame.display.set_mode((display_width, display_height))  # init resolution
+        gameDisplay.fill(white)
+        if player1.winner == 1:
+            largeText = pygame.font.SysFont("freesansbold.ttf", 95)
+            TextSurf, TextRect = text_objects(player1.name + "is the winner!", largeText)
+            TextRect.center = ((display_width / 2), (display_height / 4))
+            gameDisplay.blit(TextSurf, TextRect)
+        elif player2.winner == 1:
+            largeText = pygame.font.SysFont("freesansbold.ttf", 95)
+            TextSurf, TextRect = text_objects(player2.name + "is the winner!", largeText)
+            TextRect.center = ((display_width / 2), (display_height / 4))
+            gameDisplay.blit(TextSurf, TextRect)
+        elif player3.winner == 1:
+            largeText = pygame.font.SysFont("freesansbold.ttf", 95)
+            TextSurf, TextRect = text_objects(player3.name + "is the winner!", largeText)
+            TextRect.center = ((display_width / 2), (display_height / 4))
+            gameDisplay.blit(TextSurf, TextRect)
+        elif player4.winner == 1:
+            largeText = pygame.font.SysFont("freesansbold.ttf", 95)
+            TextSurf, TextRect = text_objects(player4.name + "is the winner!", largeText)
+            TextRect.center = ((display_width / 2), (display_height / 4))
+            gameDisplay.blit(TextSurf, TextRect)
+        button("Main Menu", 50, 500, 700, 50, tint_green, green, game_intro)
+        pygame.display.flip()
 def game_main():    #hoofd gamescher
     Players, Playing = False, True
     startinit = 1
+    game_main.part = 1
+    game_main.playerturn = 1
+    game_main.cat1 = 0
+    game_main.cat2 = 0
+    game_main.cat3 = 0
+    game_main.cat4 = 0
+    game_main.question = 0
+    player1.changepos(0,0)
+    player2.changepos(0,0)
+    player3.changepos(0,0)
+    player4.changepos(0,0)
     pause = False
-    turn = 2
+    game_main.turn = 1
     helpertext = ""
     display_width = 1024
     display_height = 700
@@ -637,6 +798,7 @@ def game_main():    #hoofd gamescher
     player2.dicenum = "0"
     player3.dicenum = "0"
     player4.dicenum = "0"
+    player1.position = 13
     gameDisplay = pygame.display.set_mode((display_width, display_height))  # init resolution
     while Playing:
         for event in pygame.event.get():
@@ -646,40 +808,145 @@ def game_main():    #hoofd gamescher
         gameDisplay.fill(white)
         clock.tick(15)  #refresh rate van 15
         pop_up()
+        callquestion()
         drawgamescreen()
+        drawplayers()
+        questionview()
 
         smallText = pygame.font.SysFont("freesansbold.ttf", 32)
         textSurf1, textRect1 = text_objects(helpertext, smallText)
         textRect1 = (50, 600)
         gameDisplay.blit(textSurf1, textRect1)
         gameDisplay.blit(get_image('img/empty.png'), (860,20))
-        drawplayers()
         if startinit == 1:
             player1.turn = True
             player2.turn = False
             player3.turn = False
             player4.turn = False
             startinit = 0
-        if turn == 0:
+        if game_main.turn == 0:
             if player1.turn == True:
-                helpertext = "Speler 1, gooi de dobbelsteen"
+                game_main.playerturn = 1
+                helpertext = "Player 1, throw the dice"
                 button("Throw", 50, 640, 100, 50, tint_green,green, dice1.throw, turnforward)
             elif player2.turn == True:
-                helpertext = "Speler 2, gooi de dobbelsteen"
+                game_main.playerturn = 2
+                helpertext = "Player 2, throw the dice"
                 button("Throw", 50, 640, 100, 50, tint_green,green, dice1.throw, turnforward)
             elif player3.turn == True:
-                helpertext = "Speler 3, gooi de dobbelsteen"
+                game_main.playerturn = 3
+                helpertext = "Player 3, throw the dice"
                 button("Throw", 50, 640, 100, 50, tint_green,green, dice1.throw, turnforward)
             elif player4.turn == True:
-                helpertext = "Speler 4, gooi de dobbelsteen"
+                game_main.playerturn = 4
+                helpertext = "Player 4, throw the dice"
                 button("Throw", 50, 640, 100, 50, tint_green,green, dice1.throw, turnforward)
-        if turn == 2:
+        elif game_main.turn == 1:
             if player1.turn == True:
-                helpertext = "Speler 1, kies een richting"
-                button("Links", 50, 640, 100, 50, tint_green,green, dice1.throw, turnforward)
-                button("Rechts", 200, 640, 100, 50, tint_green, green, dice1.throw, turnforward)
-                button("Boven", 350, 640, 100, 50, tint_green, green, dice1.throw, turnforward)
-                button("Beneden", 500, 640, 100, 50, tint_green, green, dice1.throw, turnforward)
+                game_main.playerturn = 1
+                helpertext = "Player 1, choose your starting category"
+                button("Sport", 50, 640, 100, 50, tint_green,green, startcat1,turnforward)
+                button("Entertainment", 200, 640, 100, 50, tint_green,green, startcat2,turnforward)
+                button("History", 350, 640, 100, 50, tint_green,green, startcat3,turnforward)
+                button("Geography", 500, 640, 100, 50, tint_green,green, startcat4, turnforward)
+            elif player2.turn == True:
+                game_main.playerturn = 2
+                helpertext = "Player 2, choose your starting category"
+                if game_main.cat1 == 0:
+                    button("Sport", 50, 640, 100, 50, tint_green,green, startcat1,turnforward)
+                if game_main.cat2 == 0:
+                    button("Entertainment", 200, 640, 100, 50, tint_green,green, startcat2,turnforward)
+                if game_main.cat3 == 0:
+                    button("History", 350, 640, 100, 50, tint_green,green, startcat3,turnforward)
+                if game_main.cat4 == 0:
+                    button("Geography", 500, 640, 100, 50, tint_green,green, startcat4, turnforward)
+            elif player3.turn == True:
+                game_main.playerturn = 3
+                helpertext = "Player 3, choose your starting category"
+                if game_main.cat1 == 0:
+                    button("Sport", 50, 640, 100, 50, tint_green,green, startcat1,turnforward)
+                if game_main.cat2 == 0:
+                    button("Entertainment", 200, 640, 100, 50, tint_green,green, startcat2,turnforward)
+                if game_main.cat3 == 0:
+                    button("History", 350, 640, 100, 50, tint_green,green, startcat3,turnforward)
+                if game_main.cat4 == 0:
+                    button("Geography", 500, 640, 100, 50, tint_green,green, startcat4, turnforward)
+            elif player4.turn == True:
+                game_main.playerturn = 4
+                helpertext = "Player 4, choose your starting category"
+                if game_main.cat1 == 0:
+                    button("Sport", 50, 640, 100, 50, tint_green,green, startcat1,turnforward)
+                if game_main.cat2 == 0:
+                    button("Entertainment", 200, 640, 100, 50, tint_green,green, startcat2,turnforward)
+                if game_main.cat3 == 0:
+                    button("History", 350, 640, 100, 50, tint_green,green, startcat3,turnforward)
+                if game_main.cat4 == 0:
+                    button("Geography", 500, 640, 100, 50, tint_green,green, startcat4, turnforward)
+        elif game_main.turn >= 2:
+            if player1.turn == True:
+                if game_main.part == 1:
+                    helpertext = "Player 1, throw the dice"
+                    button("Throw", 50, 640, 100, 50, tint_green, green, dice1.throw, addpart)
+                elif game_main.part == 2:
+                    helpertext = "Player 1, choose a card."
+                    button("Card", 200, 640, 100, 50, tint_green, green, questiontrue, questionview)
+                elif game_main.part == 3:
+                    helpertext = "Player 1, choose the direction"
+                    if player1.position < 9:
+                        button("Left", 50, 640, 100, 50, tint_green,green, player1.moveleft, turnforward)
+                        button("Right", 200, 640, 100, 50, tint_green, green, player1.moveright, turnforward)
+                    button("Up", 350, 640, 100, 50, tint_green, green,player1.moveup, turnforward)
+                if player1.position >= 14:
+                    player1.winner = 1
+                    winscreen()
+            if player2.turn == True:
+                if game_main.part == 1:
+                    helpertext = "Player 2, throw the dice"
+                    button("Throw", 50, 640, 100, 50, tint_green, green, dice1.throw, addpart)
+                elif game_main.part == 2:
+                    helpertext = "Player 2, choose a card."
+                    button("Card", 200, 640, 100, 50, tint_green, green, questiontrue, questionview)
+                elif game_main.part == 3:
+                    helpertext = "Player 2, choose the direction"
+                    if player2.position < 9:
+                        button("Left", 50, 640, 100, 50, tint_green,green, player2.moveleft, turnforward)
+                        button("Right", 200, 640, 100, 50, tint_green, green, player2.moveright, turnforward)
+                    button("Up", 350, 640, 100, 50, tint_green, green,player2.moveup, turnforward)
+                if player2.position >= 14:
+                    player2.winner = 1
+                    winscreen()
+            if player3.turn == True:
+                if game_main.part == 1:
+                    helpertext = "Player 3, throw the dice"
+                    button("Throw", 50, 640, 100, 50, tint_green, green, dice1.throw, addpart)
+                elif game_main.part == 2:
+                    helpertext = "Player 3, choose a card."
+                    button("Card", 200, 640, 100, 50, tint_green, green, questiontrue, questionview)
+                elif game_main.part == 3:
+                    helpertext = "Player 3 choose the direction"
+                    if player3.position < 9:
+                        button("Left", 50, 640, 100, 50, tint_green,green, player3.moveleft, turnforward)
+                        button("Right", 200, 640, 100, 50, tint_green, green, player3.moveright, turnforward)
+                    button("Up", 350, 640, 100, 50, tint_green, green,player3.moveup, turnforward)
+                if player3.position >= 14:
+                    player3.winner = 1
+                    winscreen()
+            if player4.turn == True:
+                if game_main.part == 1:
+                    helpertext = "Player 4, throw the dice"
+                    button("Throw", 50, 640, 100, 50, tint_green, green, dice1.throw, addpart)
+                elif game_main.part == 2:
+                    helpertext = "Player 4, choose a card."
+                    button("Card", 200, 640, 100, 50, tint_green, green, questiontrue, questionview)
+                elif game_main.part == 3:
+                    helpertext = "Player 4, choose the direction"
+                    if player4.position < 9:
+                        button("Left", 50, 640, 100, 50, tint_green,green, player4.moveleft, turnforward)
+                        button("Right", 200, 640, 100, 50, tint_green, green, player4.moveright, turnforward)
+                    button("Up", 350, 640, 100, 50, tint_green, green,player4.moveup, turnforward)
+                if player4.position >= 14:
+                    player4.winner = 1
+                    winscreen()
         pygame.display.flip()
 #roep de schermen op
 pygame.mixer.music.play(-1)
@@ -688,6 +955,5 @@ game_instructions()
 game_main()
 game_highscore()
 players()
-pausemenu()
 
 quit()

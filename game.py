@@ -309,8 +309,8 @@ def questionview():
                 pygame.quit()
                 quit()
         gameDisplay.fill(white)
-        drawgamescreen()
         drawplayers()
+        drawgamescreen()
         questionview.list = callquestion.list
         x = str(questionview.list[1])
         pygame.draw.rect(gameDisplay, (128,128,128), (100,100, 600, 300))
@@ -418,7 +418,7 @@ def game_intro():   #main menu scherm
         TextSurf, TextRect = text_objects("Euromast", largeText)
         TextRect.center = ((display_width / 2), (display_height / 4))
         gameDisplay.blit(TextSurf, TextRect)
-        button("Start", 50, 230, 700, 50, tint_green, green, game_main)
+        button("Start", 50, 230, 700, 50, tint_green, green, players)
         button("Instruction", 50, 305, 700, 50, tint_green, green, game_instructions)
         button("Options",50,380,700,50,tint_green, green, game_options)
         button("Highscore", 50, 455, 700, 50, tint_green, green, game_highscore)
@@ -556,7 +556,6 @@ def game_highscore():    #Highscore scherm
 
     # Open a cursor to perform database operations
     cur = conn.cursor()
-    cur.execute("UPDATE Players SET wins = wins +1 WHERE naam = 'Penkie'")
     cur.execute("SELECT * FROM Players")
     # fetch all of the rows from the query
     data = cur.fetchall ()
@@ -880,8 +879,8 @@ def game_main():    #hoofd gamescher
         gameDisplay.fill(white)
         clock.tick(15)  #refresh rate van 15
         pop_up()
-        drawgamescreen()
         drawplayers()
+        drawgamescreen()
         callquestion()
         questionview()
 

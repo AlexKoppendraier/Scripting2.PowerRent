@@ -17,6 +17,8 @@ tint_green = (0, 200, 0)
 green = (0, 255, 0)
 tint_blue = (0, 0, 200)
 blue = (0,0,255)
+lgrey = (240,240,240)
+grey = (128,128,128)
 #Kleuren voor speler selectie
 r = [255,0,0,255,255,0,0]
 g = [0,255,0,255,0,255,0]
@@ -59,6 +61,7 @@ class player(object): #Klasse speler
         self.r = r
         self.g = g
         self.b = b
+        self.dicenum = "5"
         self.color = (r,g,b)
         self.gridx = gridx
         self.gridy = gridy
@@ -67,6 +70,9 @@ class player(object): #Klasse speler
     def nameinput(self,x,y): #Naam input tekenen
         self.txtbx = eztext.Input(x=x, y=y,maxlength=45, color=(255, 0, 0), prompt='Name: ')
         self.txtbx.value = self.name
+    def changepos(self,x,y): #Beweeg de pion
+        self.gridx = x
+        self.gridy = y
     def move(self,x,y): #Beweeg de pion
         self.gridx += x
         self.gridy += y
@@ -136,7 +142,7 @@ class dice(object): #Klasse dobbelsteen
     def throw(self): #Gooi de dobbelsteen
         while self.duration < random.randint(5,15):
             self.num = random.randint(self.x, self.y)
-            gameDisplay.blit(get_image("img/" + str(self.num) + ".png"), (100, 100))
+            gameDisplay.blit(get_image("img/" + str(self.num) + ".png"), (860, 20))
             self.duration = self.duration + 1
             pygame.display.flip()
             print(str(self.duration))
@@ -144,7 +150,7 @@ class dice(object): #Klasse dobbelsteen
         self.duration = 20
         while self.duration < random.randint(20,28):
             self.num = random.randint(self.x, self.y)
-            gameDisplay.blit(get_image("img/" + str(self.num) + ".png"), (100, 100))
+            gameDisplay.blit(get_image("img/" + str(self.num) + ".png"), (860, 20))
             self.duration = self.duration + 1
             pygame.display.flip()
             print(str(self.duration))
@@ -152,18 +158,26 @@ class dice(object): #Klasse dobbelsteen
         self.duration = 30
         while self.duration < random.randint(30,32):
             self.num = random.randint(self.x, self.y)
-            gameDisplay.blit(get_image("img/" + str(self.num) + ".png"), (100, 100))
+            gameDisplay.blit(get_image("img/" + str(self.num) + ".png"), (860, 20))
             self.duration = self.duration + 1
             pygame.display.flip()
             print(str(self.duration))
             time.sleep(0.5)
         self.duration = 40
         while self.duration == 40:
-            gameDisplay.blit(get_image("img/" + str(self.num) + ".png"), (100, 100))
+            gameDisplay.blit(get_image("img/" + str(self.num) + ".png"), (860, 20))
             pygame.display.flip()
             time.sleep(2)
             self.duration = 50
         if self.duration == 50:
+            if player1.turn == True and player2.turn == False:
+                player1.dicenum = str(self.num)
+            elif player2.turn == True and player3.turn == False:
+                player2.dicenum = str(self.num)
+            elif player3.turn == True and player4.turn == False:
+                player3.dicenum = str(self.num)
+            elif player4.turn == True and player1.turn == False:
+                player4.dicenum = str(self.num)
             self.duration = 0
             return
 
@@ -173,7 +187,7 @@ player2 = player("Hankie", 0, 255,255,0, 270, 220,0)
 player3 = player("Penkie", 0, 0,0,255, 470, 220,0)
 player4 = player("Shanghai", 0, 255,0,0, 670, 220,0)
 #Pion defineren
-dice1 = dice(1,6,1)
+dice1 = dice(1,6,0)
 
 
 
@@ -216,13 +230,17 @@ def get_image(path):    #functie om een foto te tonen
                 _image_library[path] = image
         return image
 
-def button(msg,x,y,w,h,ic,ac,action=None):          #functie om een knop te maken (text,x,y,width,height,kleur, hover kleur, actie)
+def button(msg,x,y,w,h,ic,ac,action=None,action2=None):          #functie om een knop te maken (text,x,y,width,height,kleur, hover kleur, actie)
     mouse = pygame.mouse.get_pos()
     click = pygame.mouse.get_pressed()
     if x+w > mouse[0] > x and y+h > mouse[1] > y:   #als de muis over de knop hovert, verander de kleur
         pygame.draw.rect(gameDisplay, ac,(x,y,w,h))
-        if click[0] == 1 and action != None:        #als je er op klikt, doe actie
+        if click[0] == 1 and action != None and action2 == None:        #als je er op klikt, doe actie
             action()
+        elif click[0] == 1 and action != None and action2 !=None:        #als je er op klikt, doe actie
+            action()
+            action2()
+
     else:
         pygame.draw.rect(gameDisplay, ic,(x,y,w,h))
     smallText = pygame.font.SysFont("freesansbold.ttf",20)
@@ -230,26 +248,19 @@ def button(msg,x,y,w,h,ic,ac,action=None):          #functie om een knop te make
     textRect.center = ( (x+(w/2)), (y+(h/2)) )
     gameDisplay.blit(textSurf, textRect)
 
-
-def pop_up():
-    keypressed = pygame.key.get_pressed()
-    if keypressed[pygame.K_ESCAPE]:
-        pygame.draw.rect(gameDisplay, red, (300, 100, 200, 400))
-        button("Sound off", 320, 130, 75, 50, tint_green, green, sound_off)
-        button("Sound on", 405, 130, 75, 50, tint_green, green, sound_on)
-        button("Volume -", 320, 230, 75, 50, tint_green, green, volumedown)
-        button("Volume +", 405, 230, 75, 50, tint_green, green, volumeup)
-
 def text_objects(text, font):   #functie om tekst te tonen
     textSurface = font.render(text, True, black)
     return textSurface, textSurface.get_rect()
 
 def game_intro():   #main menu scherm
-    Instruction, Intro, Players = False, True, False
+    Instruction, Intro, Players, Options = False, True, False, False
     player1.turn = True
     player2.turn, player3.turn, player4.turn = False, False, False
     # ohgodwhy
     x, y, mov_x, mov_y = 0,0,6,6
+    display_width = 800
+    display_height = 600
+    gameDisplay = pygame.display.set_mode((display_width, display_height))  # init resolution
     while intro:
         x += mov_x
         y += mov_y
@@ -265,11 +276,11 @@ def game_intro():   #main menu scherm
         gameDisplay.fill(white)
         gameDisplay.blit(get_image('logoball.png'), (x, y))
         largeText = pygame.font.SysFont("freesansbold.ttf", 115)
-        TextSurf, TextRect = text_objects("Euromast", largeText)
+        TextSurf, TextRect = text_objects("Titel", largeText)
         TextRect.center = ((display_width / 2), (display_height / 4))
         gameDisplay.blit(TextSurf, TextRect)
         button("Start", 50, 230, 700, 50, tint_green, green, players)
-        button("Instruction", 50, 305, 700, 50, tint_green, green, dice1.throw)
+        button("Instruction", 50, 305, 700, 50, tint_green, green, game_instructions)
         button("Options",50,380,700,50,tint_green, green, game_options)
         button("Highscore", 50, 455, 700, 50, tint_green, green, game_highscore)
         button("Quit", 50, 530, 700, 50, tint_red, red, quit)
@@ -286,7 +297,8 @@ def game_instructions():    #instructie scherm
                 pygame.quit()
                 quit()
         gameDisplay.fill(white)
-        button("Back", 50, 500, 700, 50, tint_green, green, game_intro)
+        gameDisplay.blit(get_image('handleiding.png'), (125, 0))
+        button("Back", 50, 0, 100, 50, tint_green, green, game_intro)
         clock.tick(15)  #refresh rate van 15
         pygame.display.flip()
 
@@ -399,58 +411,34 @@ def players(): #speler keuze scherm
             button("Back", 50, 500, 700, 50, tint_green, green, turnbackward)
         pygame.display.flip()
 
-#def get_question():
-#    check = 0
-#    try:
-#        conn = psycopg2.connect("dbname=Project2 user=postgres password=wachtwoord")
-#    except:
-#        print('Can\'t connect')
-#    cur = conn.cursor()
-#    if check == 0:
-#        cur.execute("SELECT * from questions order by RANDOM() limit 1")
-#        check = 2
-#    else:
-#        pass
-#    rows = cur.fetchall ()
-#    cur.close()
-#    conn.commit()
-
 
 def question():
     check = 0
-    try:
-        conn = psycopg2.connect("dbname=Project2 user=postgres password=wachtwoord")
-    except:
-        print('Can\'t connect')
-    cur = conn.cursor()
     if check == 0:
+        try:
+            conn = psycopg2.connect("dbname=Project2 user=postgres password=wachtwoord")
+        except:
+            print('Can\'t connect')
+        cur = conn.cursor()
         cur.execute("SELECT * from questions order by RANDOM() limit 1")
-        check = 2
-    else:
-        pass
+        check = 1
     rows = cur.fetchall ()
     cur.close()
     conn.commit()
-    get_question()
-    for row in rows:
-            x = str(row[1])
-            pygame.draw.rect(gameDisplay, (128,128,128), (100,100, 600, 300))
-            Text = pygame.font.SysFont("freesansbold.ttf", 22)
-            TextSurf, TextRect = text_objects(x,Text)
-            TextRect.center = ((display_width / 2), (display_height / 4))
-            gameDisplay.blit(TextSurf, TextRect)
-            button(str(row[2]), 115, 250, 275, 50, tint_green, red)
-            button(str(row[3]), 410, 250, 275, 50, tint_green, red)
-            button(str(row[4]), 115, 325, 275, 50, tint_green, red)
-            button(str(row[5]), 410, 325, 275, 50, tint_green, red)
+    if check == 1:
+        for row in rows:
+                print(row)
+                x = str(row[1])
+                pygame.draw.rect(gameDisplay, (128,128,128), (100,100, 600, 300))
+                Text = pygame.font.SysFont("freesansbold.ttf", 22)
+                TextSurf, TextRect = text_objects(x,Text)
+                TextRect.center = ((display_width / 2), (display_height / 4))
+                gameDisplay.blit(TextSurf, TextRect)
+                button(str(row[2]), 115, 250, 275, 50, tint_green, red)
+                button(str(row[3]), 410, 250, 275, 50, tint_green, red)
+                button(str(row[4]), 115, 325, 275, 50, tint_green, red)
+                button(str(row[5]), 410, 325, 275, 50, tint_green, red)
 
-
-    #geografie = SELECT question from quetions WHERE id_cat = 1
-    #sport = SELECT question from questions WHERE id_cat = 2
-    #geschiedenis = SELECT question from quesions WHERE id_cat = 3
-    #entertainment = SELECT question from questions WHERE id_cat = 4
-
-       #functie om een knop te maken (text,x,y,width,height,kleur, hover kleur, actie)
 
 def game_highscore():    #Highscore scherm
     # Connect to an existing database
@@ -514,7 +502,7 @@ def game_highscore():    #Highscore scherm
         clock.tick(15)  #refresh rate van 15
         pygame.display.flip()
 def game_options():  #opties menu
-    Options, Intro = True, False
+    Instruction, Intro, Options = False, False, True
     while Options:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -528,7 +516,7 @@ def game_options():  #opties menu
         button("Back", 50, 500, 700, 50, tint_red, red, game_intro)
         currentvolume = pygame.mixer.music.get_volume()
         smallText = pygame.font.Font("freesansbold.ttf", 40)
-        textSurf, textRect = text_objects(str(currentvolume), smallText)
+        textSurf, textRect = text_objects(str(round(currentvolume,1)), smallText)
         textRect.center = (400, 350)
         question()
         gameDisplay.blit(textSurf, textRect)
@@ -539,34 +527,167 @@ def sound_off():
     pygame.mixer.music.pause()
 def sound_on():
     pygame.mixer.music.unpause()
+
 def volumedown():
     volume = pygame.mixer.music.get_volume()
     volume = volume - 0.1
     pygame.mixer.music.set_volume(volume)
+
 def volumeup():
     volume = pygame.mixer.music.get_volume()
     volume = volume + 0.1
     pygame.mixer.music.set_volume(volume)
+def drawgamescreen():
+    gameDisplay.blit(get_image('euromastbr.png'), (-300, 2))
+    gameDisplay.blit(get_image('euromastrb.png'), (-100, 2))
+    gameDisplay.blit(get_image('euromastgy.png'), (100, 2))
+    gameDisplay.blit(get_image('euromastyg.png'), (300, 2))
+    pygame.draw.rect(gameDisplay, lgrey, (800, 0, 600, 700))
+    pygame.draw.line(gameDisplay, black, (0, 600), (800, 600), 2)
+    pygame.draw.rect(gameDisplay, lgrey, (0, 602, 1024, 200))
+    pygame.draw.line(gameDisplay, black, (800, 0), (800, 700), 2)
+def drawplayers():
+    player1.changepos(890,220)
+    player2.changepos(890,330)
+    player3.changepos(890,440)
+    player4.changepos(890,550)
+    player1.draw()
+    player2.draw()
+    player3.draw()
+    player4.draw()
+    smallText = pygame.font.SysFont("freesansbold.ttf", 32)
+    textSurf1, textRect1 = text_objects(player1.name, smallText)
+    textRect1 = (880, 190)
+    textSurf2, textRect2 = text_objects(player2.name, smallText)
+    textRect2 = (880, 300)
+    textSurf3, textRect3 = text_objects(player3.name, smallText)
+    textRect3 = (880, 410)
+    textSurf4, textRect4 = text_objects(player4.name, smallText)
+    textRect4 = (880, 520)
+    textSurf5, textRect5 = text_objects(player1.dicenum, smallText)
+    textRect5 = (910, 240)
+    textSurf6, textRect6 = text_objects(player2.dicenum, smallText)
+    textRect6 = (910, 350)
+    textSurf7, textRect7 = text_objects(player3.dicenum, smallText)
+    textRect7 = (910, 460)
+    textSurf8, textRect8 = text_objects(player4.dicenum, smallText)
+    textRect8 = (910, 570)
+    gameDisplay.blit(textSurf1, textRect1)
+    gameDisplay.blit(textSurf2, textRect2)
+    gameDisplay.blit(textSurf3, textRect3)
+    gameDisplay.blit(textSurf4, textRect4)
+    gameDisplay.blit(textSurf5, textRect5)
+    gameDisplay.blit(textSurf6, textRect6)
+    gameDisplay.blit(textSurf7, textRect7)
+    gameDisplay.blit(textSurf8, textRect8)
+def pop_up():
+    pause = 0
+    tut = 0
+    for event in pygame.event.get():
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_ESCAPE:
+                pause = 1
+                tut = 0
+            if event.key == pygame.K_RETURN:
+                tut = 1
+                pause = 0
+    while tut == 1:
+        for event in pygame.event.get():
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_RETURN:
+                    tut = 0
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                quit()
+        gameDisplay.fill(white)
+        gameDisplay.blit(get_image('tutorial.png'), (0, 0))
+        pygame.display.flip()
+    while pause == 1:
+        for event in pygame.event.get():
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    pause = 0
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                quit()
+        gameDisplay.fill(white)
+        button("Sound off", 50, 130, 350, 50, tint_green, green, sound_off)
+        button("Sound on", 400, 130, 350, 50, tint_green, green, sound_on)
+        button("Volume down", 50, 230, 350, 50, tint_green, green, volumedown)
+        button("Volume up", 400, 230, 350, 50, tint_green, green, volumeup)
+        button("Quit", 50, 500, 700, 50, tint_red, red, game_intro)
+        currentvolume = pygame.mixer.music.get_volume()
+        smallText = pygame.font.Font("freesansbold.ttf", 40)
+        textSurf, textRect = text_objects(str(round(currentvolume,1)), smallText)
+        textRect.center = (400, 350)
+        gameDisplay.blit(textSurf, textRect)
+        clock.tick(15)  #refresh rate van 15
+        pygame.display.flip()
 
-def game_main():    #hoofd gamescherm
+
+def game_main():    #hoofd gamescher
     Players, Playing = False, True
+    startinit = 1
+    pause = False
+    turn = 2
+    helpertext = ""
+    display_width = 1024
+    display_height = 700
+    player1.dicenum = "0"
+    player2.dicenum = "0"
+    player3.dicenum = "0"
+    player4.dicenum = "0"
+    gameDisplay = pygame.display.set_mode((display_width, display_height))  # init resolution
     while Playing:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 quit()
         gameDisplay.fill(white)
-        pop_up()
         clock.tick(15)  #refresh rate van 15
+        pop_up()
+        drawgamescreen()
+
+        smallText = pygame.font.SysFont("freesansbold.ttf", 32)
+        textSurf1, textRect1 = text_objects(helpertext, smallText)
+        textRect1 = (50, 600)
+        gameDisplay.blit(textSurf1, textRect1)
+        gameDisplay.blit(get_image('img/empty.png'), (860,20))
+        drawplayers()
+        if startinit == 1:
+            player1.turn = True
+            player2.turn = False
+            player3.turn = False
+            player4.turn = False
+            startinit = 0
+        if turn == 0:
+            if player1.turn == True:
+                helpertext = "Speler 1, gooi de dobbelsteen"
+                button("Throw", 50, 640, 100, 50, tint_green,green, dice1.throw, turnforward)
+            elif player2.turn == True:
+                helpertext = "Speler 2, gooi de dobbelsteen"
+                button("Throw", 50, 640, 100, 50, tint_green,green, dice1.throw, turnforward)
+            elif player3.turn == True:
+                helpertext = "Speler 3, gooi de dobbelsteen"
+                button("Throw", 50, 640, 100, 50, tint_green,green, dice1.throw, turnforward)
+            elif player4.turn == True:
+                helpertext = "Speler 4, gooi de dobbelsteen"
+                button("Throw", 50, 640, 100, 50, tint_green,green, dice1.throw, turnforward)
+        if turn == 2:
+            if player1.turn == True:
+                helpertext = "Speler 1, kies een richting"
+                button("Links", 50, 640, 100, 50, tint_green,green, dice1.throw, turnforward)
+                button("Rechts", 200, 640, 100, 50, tint_green, green, dice1.throw, turnforward)
+                button("Boven", 350, 640, 100, 50, tint_green, green, dice1.throw, turnforward)
+                button("Beneden", 500, 640, 100, 50, tint_green, green, dice1.throw, turnforward)
         pygame.display.flip()
-
-
-
-pygame.mixer.music.play(-1)#roep de schermen op
+#roep de schermen op
+pygame.mixer.music.play(-1)
 game_intro()
 game_instructions()
 game_main()
 game_highscore()
 players()
+pausemenu()
 
 quit()

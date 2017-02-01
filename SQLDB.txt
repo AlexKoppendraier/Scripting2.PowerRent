@@ -1,0 +1,14 @@
+Create Table players(Naam varchar, Wins int, Losses int,
+Primary key (Naam));
+
+INSERT INTO players
+VALUES(Henkie,1,0);
+
+INSERT INTO players
+VALUES(Hankie,1,0);
+
+INSERT INTO players
+VALUES(Shanghai,0,2);
+
+INSERT INTO players
+VALUES(Penkie,5,0)

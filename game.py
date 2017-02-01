@@ -411,6 +411,35 @@ def players(): #speler keuze scherm
             button("Back", 50, 500, 700, 50, tint_green, green, turnbackward)
         pygame.display.flip()
 
+
+def question():
+    check = 0
+    if check == 0:
+        try:
+            conn = psycopg2.connect("dbname=Project2 user=postgres password=wachtwoord")
+        except:
+            print('Can\'t connect')
+        cur = conn.cursor()
+        cur.execute("SELECT * from questions order by RANDOM() limit 1")
+        check = 1
+    rows = cur.fetchall ()
+    cur.close()
+    conn.commit()
+    if check == 1:
+        for row in rows:
+                print(row)
+                x = str(row[1])
+                pygame.draw.rect(gameDisplay, (128,128,128), (100,100, 600, 300))
+                Text = pygame.font.SysFont("freesansbold.ttf", 22)
+                TextSurf, TextRect = text_objects(x,Text)
+                TextRect.center = ((display_width / 2), (display_height / 4))
+                gameDisplay.blit(TextSurf, TextRect)
+                button(str(row[2]), 115, 250, 275, 50, tint_green, red)
+                button(str(row[3]), 410, 250, 275, 50, tint_green, red)
+                button(str(row[4]), 115, 325, 275, 50, tint_green, red)
+                button(str(row[5]), 410, 325, 275, 50, tint_green, red)
+
+
 def game_highscore():    #Highscore scherm
     # Connect to an existing database
     conn = psycopg2.connect("dbname=Project2 user=postgres password=wachtwoord")
@@ -489,6 +518,7 @@ def game_options():  #opties menu
         smallText = pygame.font.Font("freesansbold.ttf", 40)
         textSurf, textRect = text_objects(str(round(currentvolume,1)), smallText)
         textRect.center = (400, 350)
+        question()
         gameDisplay.blit(textSurf, textRect)
         clock.tick(15)  #refresh rate van 15
         pygame.display.flip()

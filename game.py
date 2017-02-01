@@ -43,9 +43,8 @@ def db():
     cur.execute("SELECT * FROM Players")
     # fetch all of the rows from the query
     data = cur.fetchall ()
-# print the rows
     for row in data :
-        print("Naam",row[0], "Wins",row[1], "Losses",row[2])
+
         pygame.display.flip()
         cur.close()
 
@@ -71,6 +70,7 @@ class player(object): #Klasse speler
         self.winner = 1
         self.turn = False
         self.position = 1
+        self.spot = 1
     def nameinput(self,x,y): #Naam input tekenen
         self.txtbx = eztext.Input(x=x, y=y,maxlength=45, color=(255, 0, 0), prompt='Name: ')
         self.txtbx.value = self.name
@@ -80,30 +80,30 @@ class player(object): #Klasse speler
     def moveright(self):
         self.movement = int(self.dicenum)
         while self.movement > 0:
-            if self.position < 8:
-                if self.position % 2 == 1:
+            if self.spot < 8:
+                if self.spot % 2 == 1:
                     self.gridx += 40
-                elif self.position % 2 == 0:
+                elif self.spot % 2 == 0:
                     self.gridx += 160
-                self.position += 1
-            elif self.position == 8:
+                self.spot += 1
+            elif self.spot == 8:
                 self.gridx = 65
-                self.position = 1
+                self.spot = 1
             self.movement -= 1
             time.sleep(0.4)
             self.dicenum = str(self.movement)
     def moveleft(self):
         self.movement = int(self.dicenum)
         while self.movement > 0:
-            if self.position > 1:
-                if self.position % 2 == 1:
+            if self.spot > 1:
+                if self.spot % 2 == 1:
                     self.gridx -= 160
-                elif self.position % 2 == 0:
+                elif self.spot % 2 == 0:
                     self.gridx -= 40
-                self.position -= 1
-            elif self.position == 1:
+                self.spot -= 1
+            elif self.spot == 1:
                 self.gridx = 705
-                self.position = 8
+                self.spot = 8
             self.movement -= 1
             time.sleep(0.4)
             self.dicenum = str(self.movement)
@@ -112,16 +112,20 @@ class player(object): #Klasse speler
         while self.movement > 0:
             if self.position < 9:
                 self.gridy -= 24
-            elif self.movement == 9:
+                print("24")
+            elif self.position == 9:
                 if self.position % 2 == 1:
                     self.gridx += 20
                 elif self.position % 2 == 0:
                     self.gridx -= 20
                 self.gridy -= 110
+                print("110")
             elif self.position > 9 and self.position < 14:
-                self.gridy -= 39
+                self.gridy -= 36
+                print("36")
             elif self.position == 14:
-                self.gridy -= 42
+                self.gridy -= 40
+                print("40")
             self.position += 1
             self.movement -= 1
             time.sleep(0.4)
@@ -203,7 +207,6 @@ class dice(object): #Klasse dobbelsteen
             gameDisplay.blit(get_image("img/" + str(self.num) + ".png"), (860, 20))
             self.duration = self.duration + 1
             pygame.display.flip()
-            print(str(self.duration))
             time.sleep(0.05)
         self.duration = 20
         while self.duration < random.randint(20,28):
@@ -211,7 +214,6 @@ class dice(object): #Klasse dobbelsteen
             gameDisplay.blit(get_image("img/" + str(self.num) + ".png"), (860, 20))
             self.duration = self.duration + 1
             pygame.display.flip()
-            print(str(self.duration))
             time.sleep(0.2)
         self.duration = 30
         while self.duration < random.randint(30,32):
@@ -219,7 +221,6 @@ class dice(object): #Klasse dobbelsteen
             gameDisplay.blit(get_image("img/" + str(self.num) + ".png"), (860, 20))
             self.duration = self.duration + 1
             pygame.display.flip()
-            print(str(self.duration))
             time.sleep(0.5)
         self.duration = 40
         while self.duration == 40:
@@ -240,7 +241,7 @@ class dice(object): #Klasse dobbelsteen
             return
 
 #Spelers defineren
-player1 = player("Henkie", 13, 0,255,0, 70, 220,0)
+player1 = player("Henkie", 0, 0,255,0, 70, 220,0)
 player2 = player("Hankie", 0, 255,255,0, 270, 220,0)
 player3 = player("Penkie", 0, 0,0,255, 470, 220,0)
 player4 = player("Shanghai", 0, 255,0,0, 670, 220,0)
@@ -254,8 +255,44 @@ def callquestion():
     except:
         print('Can\'t connect')
     cur = conn.cursor()
-    cur.execute("SELECT * from questions order by RANDOM() limit 1")
-    check = 1
+    if game_main.turn <= 1:
+        cur.execute("SELECT * from questions where id_cat = '1' order by RANDOM() limit 1")
+    if player1.turn == True:
+        if player1.spot >= 3 <= 4:
+            cur.execute("SELECT * from questions where id_cat = '1' order by RANDOM() limit 1")
+        elif player1.spot >= 1 <= 2:
+            cur.execute("SELECT * from questions where id_cat = '2' order by RANDOM() limit 1")
+        elif player1.spot >= 7 <= 8:
+            cur.execute("SELECT * from questions where id_cat = '3' order by RANDOM() limit 1")
+        elif player1.spot >= 5 <= 6:
+            cur.execute("SELECT * from questions where id_cat = '4' order by RANDOM() limit 1")
+    if player2.turn == True:
+        if player2.spot >= 3 <= 4:
+            cur.execute("SELECT * from questions where id_cat = '1' order by RANDOM() limit 1")
+        elif player2.spot >= 1 <= 2:
+            cur.execute("SELECT * from questions where id_cat = '2' order by RANDOM() limit 1")
+        elif player2.spot >= 7 <= 8:
+            cur.execute("SELECT * from questions where id_cat = '3' order by RANDOM() limit 1")
+        elif player2.spot >= 5 <= 6:
+            cur.execute("SELECT * from questions where id_cat = '4' order by RANDOM() limit 1")
+    if player3.turn == True:
+        if player3.spot >= 3 <= 4:
+            cur.execute("SELECT * from questions where id_cat = '1' order by RANDOM() limit 1")
+        elif player3.spot >= 1 <= 2:
+            cur.execute("SELECT * from questions where id_cat = '2' order by RANDOM() limit 1")
+        elif player3.spot >= 7 <= 8:
+            cur.execute("SELECT * from questions where id_cat = '3' order by RANDOM() limit 1")
+        elif player3.spot >= 5 <= 6:
+            cur.execute("SELECT * from questions where id_cat = '4' order by RANDOM() limit 1")
+    if player4.turn == True:
+        if player4.spot >= 3 <= 4:
+            cur.execute("SELECT * from questions where id_cat = '1' order by RANDOM() limit 1")
+        elif player4.spot >= 1 <= 2:
+            cur.execute("SELECT * from questions where id_cat = '2' order by RANDOM() limit 1")
+        elif player4.spot >= 7 <= 8:
+            cur.execute("SELECT * from questions where id_cat = '3' order by RANDOM() limit 1")
+        elif player4.spot >= 5 <= 6:
+            cur.execute("SELECT * from questions where id_cat = '4' order by RANDOM() limit 1")
     rows = cur.fetchall ()
     cur.close()
     conn.commit()
@@ -264,10 +301,8 @@ def callquestion():
 
 def questiontrue():
     game_main.question = 1
-    print(game_main.question)
 
 def questionview():
-    print(game_main.question)
     while game_main.question == 1:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -277,7 +312,6 @@ def questionview():
         drawgamescreen()
         drawplayers()
         questionview.list = callquestion.list
-        print(questionview.list)
         x = str(questionview.list[1])
         pygame.draw.rect(gameDisplay, (128,128,128), (100,100, 600, 300))
         Text = pygame.font.SysFont("freesansbold.ttf", 22)
@@ -526,9 +560,7 @@ def game_highscore():    #Highscore scherm
     cur.execute("SELECT * FROM Players")
     # fetch all of the rows from the query
     data = cur.fetchall ()
-# print the rows
     for row in data :
-        print("Naam",row[0], "Wins",row[1], "Losses",row[2])
         pygame.display.flip()
         cur.close()
 
@@ -702,21 +734,25 @@ def pop_up():
 def startcat1():
     playernumber = str("player") + str(game_main.playerturn)
     eval(playernumber).changepos(65,570)
+    eval(playernumber).spot = 1
     game_main.cat1 = 1
 
 def startcat2():
     playernumber = str("player") + str(game_main.playerturn)
     eval(playernumber).changepos(265,570)
+    eval(playernumber).spot = 3
     game_main.cat2 = 1
 
 def startcat3():
     playernumber = str("player") + str(game_main.playerturn)
     eval(playernumber).changepos(465,570)
+    eval(playernumber).spot = 5
     game_main.cat3 = 1
 
 def startcat4():
     playernumber = str("player") + str(game_main.playerturn)
     eval(playernumber).changepos(665,570)
+    eval(playernumber).spot = 7
     game_main.cat4 = 1
 
 def addpart():
@@ -741,6 +777,42 @@ def right():
     time.sleep(3)
     addpart()
     game_main.question = 0
+
+def updatehs():
+    conn = psycopg2.connect("dbname=Project2 user=postgres password=wachtwoord")
+    cur = conn.cursor()
+    if player1.winner == 1:
+        cur.execute("UPDATE Players SET wins = wins + 1 WHERE naam = 'Henkie'")
+        player1.winner = 2
+        player2.winner = 0
+        player3.winner = 0
+        player4.winner = 0
+    elif player2.winner == 1:
+        cur.execute("UPDATE Players SET wins = wins + 1 WHERE naam = 'Hankie'")
+        player1.winner = 0
+        player2.winner = 2
+        player3.winner = 0
+        player4.winner = 0
+        pass
+    elif player3.winner == 1:
+        cur.execute("UPDATE Players SET wins = wins + 1 WHERE naam = 'Penkie'")
+        player1.winner = 0
+        player2.winner = 0
+        player3.winner = 2
+        player4.winner = 0
+        pass
+    elif player4.winner == 1:
+        cur.execute("UPDATE Players SET wins = wins + 1 WHERE naam = 'Shanghai'")
+        player1.winner = 0
+        player2.winner = 0
+        player3.winner = 0
+        player4.winner = 2
+        pass
+    conn.commit()
+    cur.close()
+    conn.close()
+    pygame.display.flip()
+
 def winscreen():
     print("test")
     Playing, Winning = False, True
@@ -775,6 +847,7 @@ def winscreen():
             gameDisplay.blit(TextSurf, TextRect)
         button("Main Menu", 50, 500, 700, 50, tint_green, green, game_intro)
         pygame.display.flip()
+        updatehs()
 def game_main():    #hoofd gamescher
     Players, Playing = False, True
     startinit = 1
@@ -798,7 +871,6 @@ def game_main():    #hoofd gamescher
     player2.dicenum = "0"
     player3.dicenum = "0"
     player4.dicenum = "0"
-    player1.position = 13
     gameDisplay = pygame.display.set_mode((display_width, display_height))  # init resolution
     while Playing:
         for event in pygame.event.get():
@@ -808,11 +880,12 @@ def game_main():    #hoofd gamescher
         gameDisplay.fill(white)
         clock.tick(15)  #refresh rate van 15
         pop_up()
-        callquestion()
         drawgamescreen()
         drawplayers()
+        callquestion()
         questionview()
 
+        print(player1.position)
         smallText = pygame.font.SysFont("freesansbold.ttf", 32)
         textSurf1, textRect1 = text_objects(helpertext, smallText)
         textRect1 = (50, 600)
@@ -896,6 +969,7 @@ def game_main():    #hoofd gamescher
                         button("Left", 50, 640, 100, 50, tint_green,green, player1.moveleft, turnforward)
                         button("Right", 200, 640, 100, 50, tint_green, green, player1.moveright, turnforward)
                     button("Up", 350, 640, 100, 50, tint_green, green,player1.moveup, turnforward)
+                print(player1.position)
                 if player1.position >= 14:
                     player1.winner = 1
                     winscreen()
